@@ -1,7 +1,12 @@
-import SalesPage from './SalesPage';
+import StatusBoard from "./StatusBoard";
 
 function App() {
-  return <SalesPage userName="Tony" userId="123" />;
+  return (
+    <div>
+      <h1>Uply Dashboard</h1>
+      <StatusBoard />
+    </div>
+  );
 }
 
 export default App;
