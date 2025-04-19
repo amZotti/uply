@@ -2,16 +2,48 @@ import { useState, useEffect } from "react";
 
 function StatusBoard() {
   const [checks, setChecks] = useState([]);
+  const [url, setUrl] = useState("");
 
   useEffect(() => {
+    fetchChecks();
+  }, []);
+
+  const fetchChecks = () => {
     fetch("http://localhost:8000/recent")
       .then(res => res.json())
       .then(setChecks);
-  }, []);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!url) return;
+  
+    const formattedUrl = url.startsWith("http") ? url : `https://${url}`;
+  
+    try {
+      await fetch(`http://localhost:8000/check?url=${encodeURIComponent(formattedUrl)}`);
+      setUrl("");
+      fetchChecks(); // refresh table
+    } catch (err) {
+      console.error("Error checking URL:", err);
+    }
+  };
 
   return (
     <div>
       <h2>Latest Uptime Checks</h2>
+
+      <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
+        <input
+          type="text"
+          placeholder="https://example.com"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          style={{ padding: "8px", width: "300px", marginRight: "10px" }}
+        />
+        <button type="submit" style={{ padding: "8px 16px" }}>Check URL</button>
+      </form>
+
       <table style={{ borderCollapse: "collapse", width: "100%" }}>
         <thead>
           <tr>
