@@ -1,12 +1,20 @@
-# Frontend (Vite/Node)
-node_modules
-dist
+# Root
 .env
+*.log
 
-# Backend (Python)
+# Node projects (landing, frontend)
+node_modules/
+dist/
+.next/
+out/
+.vscode/
+
+# Python (backend)
+venv/
 __pycache__/
 *.pyc
-.env
+*.sqlite3
+*.db
 
 # OS
 .DS_Store
