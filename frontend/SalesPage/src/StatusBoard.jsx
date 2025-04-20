@@ -1,48 +1,82 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-function StatusBoard() {
-  const [checks, setChecks] = useState([]);
+const VALID_TLDS = [".com", ".net", ".org", ".io", ".dev", ".ai", ".co", ".app", ".edu"];
+
+export default function StatusBoard({ token, onLogout }) {
   const [url, setUrl] = useState("");
+  const [checks, setChecks] = useState([]);
+  const [error, setError] = useState(null);
+
+  async function fetchChecks() {
+    const res = await fetch("http://localhost:8000/recent", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const data = await res.json();
+    setChecks(data);
+  }
 
   useEffect(() => {
     fetchChecks();
   }, []);
 
-  const fetchChecks = () => {
-    fetch("http://localhost:8000/recent")
-      .then(res => res.json())
-      .then(setChecks);
-  };
+  function isValidTLD(url) {
+    return VALID_TLDS.some((tld) => url.toLowerCase().endsWith(tld));
+  }
 
-  const handleSubmit = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
-    if (!url) return;
-  
-    const formattedUrl = url.startsWith("http") ? url : `https://${url}`;
-  
-    try {
-      await fetch(`http://localhost:8000/check?url=${encodeURIComponent(formattedUrl)}`);
-      setUrl("");
-      fetchChecks(); // refresh table
-    } catch (err) {
-      console.error("Error checking URL:", err);
+
+    let finalUrl = url;
+    if (!/^https?:\/\//i.test(finalUrl)) {
+      finalUrl = "https://" + finalUrl;
     }
-  };
+
+    if (!isValidTLD(finalUrl)) {
+      setError("Unsupported domain — please enter a .com, .net, .io, etc.");
+      return;
+    }
+
+    setError(null);
+
+    const res = await fetch("http://localhost:8000/check?url=" + encodeURIComponent(finalUrl), {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (res.ok) {
+      await fetchChecks();
+      setUrl("");
+    } else {
+      const data = await res.json();
+      setError(data.detail || "Failed to check URL");
+    }
+  }
 
   return (
     <div>
-      <h2>Latest Uptime Checks</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1>Uply Dashboard</h1>
+        <button onClick={onLogout}>Log Out</button>
+      </div>
 
-      <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
+      <form onSubmit={handleSubmit} style={{ marginBottom: "1rem" }}>
         <input
-          type="text"
-          placeholder="https://example.com"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          style={{ padding: "8px", width: "300px", marginRight: "10px" }}
+          placeholder="https://example.com"
+          style={{ padding: "8px", marginRight: "8px", width: "300px" }}
         />
-        <button type="submit" style={{ padding: "8px 16px" }}>Check URL</button>
+        <button style={{ padding: "8px 16px" }}>Check URL</button>
       </form>
+
+      {error && (
+        <div style={{ color: "red", marginBottom: "1rem" }}>
+          {error}
+        </div>
+      )}
 
       <table style={{ borderCollapse: "collapse", width: "100%" }}>
         <thead>
@@ -71,5 +105,3 @@ function StatusBoard() {
     </div>
   );
 }
-
-export default StatusBoard;
