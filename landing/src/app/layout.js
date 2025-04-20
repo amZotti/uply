@@ -1,6 +1,8 @@
+import './globals.css'
+
 export const metadata = {
-  title: 'Uply - Track Uptime & Changes with Precision',
-  description: 'Uply monitors uptime and tracks content changes for critical URLs. Ideal for engineers, PMs, and competitive intelligence teams.',
+  title: 'Uply',
+  description: 'Monitor uptime and detect critical content changes in real time.',
 }
 
 export default function RootLayout({ children }) {
